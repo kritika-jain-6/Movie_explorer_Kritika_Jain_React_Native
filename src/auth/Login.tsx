@@ -13,79 +13,90 @@ import {
   ActivityIndicator,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import withNavigation  from "../navigation/withHOC";
+import withNavigation from "../navigation/withHOC";
 import { loginuser } from "../api/UserAPI";
-const { width, height } = Dimensions.get("window");
 
+const { width, height } = Dimensions.get("window");
 
 interface State {
   email: string;
   password: string;
   showPassword: boolean;
   loading: boolean;
+  errorMessage: string;
 }
 
-class Login extends Component<{navigation:any} ,State> {
-  constructor(props:{navigation:any}) {
+class Login extends Component<{ navigation: any }, State> {
+  constructor(props: { navigation: any }) {
     super(props);
     this.state = {
       email: "",
       password: "",
       showPassword: false,
       loading: false,
+      errorMessage: "",
     };
   }
 
-  handleLogin = async() => {
+  handleLogin = async () => {
     const { email, password } = this.state;
 
     if (!email || !password) {
-      Alert.alert("Validation Error", "Please enter all the fields");
+      const msg = "Please enter all the fields";
+      this.setState({ errorMessage: msg });
+      Alert.alert("Validation Error", msg);
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
-      Alert.alert("Validation Error", "Please enter a valid email address");
+      const msg = "Please enter a valid email address";
+      this.setState({ errorMessage: msg });
+      Alert.alert("Validation Error", msg);
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert("Validation Error", "Password must be at least 6 characters long");
+      const msg = "Password must be at least 6 characters long";
+      this.setState({ errorMessage: msg });
+      Alert.alert("Validation Error", msg);
       return;
     }
 
-    this.setState({ loading: true });
+    this.setState({ loading: true, errorMessage: "" });
 
-    try{
-      const response=await loginuser(email,password);
-      const token=response.token;
-      if(token){
-        await AsyncStorage.setItem('authToken',token);
+    try {
+      const response = await loginuser(email, password);
+      const token = response.token;
 
-        Alert.alert("Successfully", "Logged in!");
+      if (token) {
+        await AsyncStorage.setItem("authToken", token);
+        Alert.alert("Success", "Logged in!");
         this.props.navigation.navigate("MainTabs");
-      }else{
-        Alert.alert('Login Error', 'Token not received . Please try again')
+      } else {
+        const msg = "Token not received. Please try again";
+        this.setState({ errorMessage: msg });
+        Alert.alert("Login Error", msg);
       }
-
-    }catch(error){
-      console.error('Error during Login ',error);
-      Alert.alert('Login Error', error.response?.data?.message|| error.message)
-    }finally{
+    } catch (error: any) {
+      const msg = error.response?.data?.message || error.message || "Login failed";
+      this.setState({ errorMessage: msg });
+      Alert.alert("Login Error", msg);
+    } finally {
       this.setState({ loading: false });
-    }    
+    }
   };
 
   render() {
-    const { email, password, showPassword, loading } = this.state;
-
+    const { email, password, showPassword, loading, errorMessage } = this.state;
 
     return (
       <ImageBackground source={require("../assets/background.jpg")} style={styles.background}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.container}>
             <Text style={styles.title}>Welcome to Movie Explorer</Text>
+
+            {errorMessage ? <Text style={styles.errorText} testID="error-message">{errorMessage}</Text> : null}
 
             <TextInput
               testID="email-input"
@@ -97,6 +108,7 @@ class Login extends Component<{navigation:any} ,State> {
               keyboardType="email-address"
               autoCapitalize="none"
               returnKeyType="next"
+              accessibilityLabel="Email Input"
             />
 
             <View>
@@ -110,6 +122,7 @@ class Login extends Component<{navigation:any} ,State> {
                 secureTextEntry={!showPassword}
                 returnKeyType="done"
                 onSubmitEditing={this.handleLogin}
+                accessibilityLabel="Password Input"
               />
               <TouchableOpacity
                 onPress={() => this.setState({ showPassword: !showPassword })}
@@ -119,7 +132,13 @@ class Login extends Component<{navigation:any} ,State> {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity testID="login-button" style={styles.button} onPress={this.handleLogin} disabled={loading}>
+            <TouchableOpacity
+              testID="login-button"
+              style={styles.button}
+              onPress={this.handleLogin}
+              disabled={loading}
+              accessibilityLabel="Login Button"
+            >
               {loading ? (
                 <ActivityIndicator color="black" />
               ) : (
@@ -137,7 +156,8 @@ class Login extends Component<{navigation:any} ,State> {
   }
 }
 
-export default withNavigation(Login);
+export { Login }; // For testing
+export default withNavigation(Login); // For app usage
 
 const styles = StyleSheet.create({
   background: {
@@ -199,5 +219,10 @@ const styles = StyleSheet.create({
     marginTop: 15,
     fontSize: 16,
     textDecorationLine: "underline",
+  },
+  errorText: {
+    color: "#FF6B6B",
+    textAlign: "center",
+    marginBottom: 10,
   },
 });
