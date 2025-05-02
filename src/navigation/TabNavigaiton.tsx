@@ -12,10 +12,11 @@ const Tab = createBottomTabNavigator();
 const TabNavigation = () => {
   return (
     <Tab.Navigator
-      initialRouteName="Home"
+      initialRouteName="Home"     
       screenOptions={{
-        headerShown: false,  
-        tabBarLabelStyle: { color: 'black' },
+        headerShown: false,
+        tabBarLabelStyle: { color: 'white' },
+        tabBarStyle: { backgroundColor: 'black' }, 
       }}
     >
       <Tab.Screen
@@ -43,7 +44,7 @@ const TabNavigation = () => {
               source={
                 focused
                   ? require('../assets/search.png')
-                  : require('../assets/seach-outline.png')
+                  : require('../assets/search-outline.png')
               }
               style={styles.icon}
             />
@@ -90,6 +91,7 @@ const styles = StyleSheet.create({
   icon: {
     width: 25,
     height: 25,
+    color: 'white',
     resizeMode: 'contain',
   },
 });

@@ -30,16 +30,21 @@ const MovieDetailScreen = ({ route }: { route: RouteProp<any> }) => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+<View style={styles.container}>
+<ScrollView   >
       {/* Back Arrow */}
+      
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+      <View style={styles.overlay}>
         <Image
           source={{
             uri: 'https://cdn-icons-png.flaticon.com/512/93/93634.png', // arrow-left icon
           }}
           style={styles.icon}
         />
+         </View>
       </TouchableOpacity>
+     
 
       {/* Movie Poster */}
       <Image source={{ uri: movie.poster_url }} style={styles.detailPoster} />
@@ -47,54 +52,60 @@ const MovieDetailScreen = ({ route }: { route: RouteProp<any> }) => {
       {/* Movie Info */}
       <Text style={styles.detailTitle}>{movie.title}</Text>
       <Text style={styles.detailGenre}>{movie.genre}</Text>
-      <Text style={styles.detailGenre}>⭐ {movie.rating}</Text>
+      <Text style={styles.detailGenre}>⭐ {movie.rating}/10</Text>
       <Text style={styles.detailGenre}>Year: {movie.release_year}</Text>
-      <Text style={styles.detailGenre}>Duration: {movie.duration}</Text>
+      <Text style={styles.detailGenre}>Duration: {movie.duration} min</Text>
       <Text style={styles.detailDescription}>{movie.description}</Text>
 
       {/* Watchlist Button */}
       <TouchableOpacity
-        style={[styles.watchlistButton, isInWatchlist && styles.watchlistActive]}
+      style={styles.watchlistButton}
         onPress={toggleWatchlist}
       >
-        <Image
+        {/* <Image
           source={{
             uri: isInWatchlist
-              ? 'https://cdn-icons-png.flaticon.com/512/1828/1828970.png' // filled bookmark
+              ? '<a href="https://www.flaticon.com/free-icons/watchlist" title="watchlist icons">Watchlist icons created by Tanah Basah - Flaticon</a>' // filled bookmark
               : 'https://cdn-icons-png.flaticon.com/512/1828/1828971.png', // outline bookmark
           }}
           style={styles.icon}
-        />
+        /> */}
         <Text style={styles.watchlistText}>
           {isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}
         </Text>
       </TouchableOpacity>
     </ScrollView>
+</View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000', padding: 16 },
+  overlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    borderRadius: 10,
+  },
   backButton: {
     position: 'absolute',
-    top: 20,
-    left: 16,
-    zIndex: 1,
-    backgroundColor: '#111',
+    left: 0,
+    // backgroundColor: '#111',
     padding: 8,
     borderRadius: 20,
+    top: 0,
+    zIndex:1,
   },
   icon: {
     width: 24,
     height: 24,
-    tintColor: '#FFD700',
+    tintColor: '#fff',
+    // flex:1,
   },
   detailPoster: {
     width: '100%',
-    height: 400,
+    height: 520,
     borderRadius: 10,
     marginBottom: 20,
-    marginTop: 60,
+    // marginTop: 60,
   },
   detailTitle: {
     fontSize: 24,
@@ -112,13 +123,13 @@ const styles = StyleSheet.create({
   watchlistButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#222',
     padding: 12,
     borderRadius: 8,
     justifyContent: 'center',
+    backgroundColor: '#FFD700'
   },
-  watchlistActive: { backgroundColor: '#333' },
-  watchlistText: { color: '#FFD700', fontSize: 16, marginLeft: 8 },
+  // watchlistActive: {  backgroundColor: '#222', },
+  watchlistText: { color: '#FFFFF', fontSize: 16, marginLeft: 8 },
 });
 
 export default MovieDetailScreen;

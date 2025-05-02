@@ -1,4 +1,4 @@
-import React,{useState,useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,11 +11,9 @@ import {
 } from 'react-native';
 import { getMovieDetails } from '../api/MovieAPI';
 import { useNavigation } from '@react-navigation/native';
-import { ThemeContext } from '@react-navigation/native';
 
 // Get device width and height
-const {width, height} = Dimensions.get('window');
-
+const { width, height } = Dimensions.get('window');
 
 interface Movie {
   id: string;
@@ -27,13 +25,13 @@ interface Movie {
   poster_url: string; // Update to match the API field for the image URL
 }
 
-const MovieItem = ({item}: {item: Movie}) => {
+const MovieItem = ({ item }: { item: Movie }) => {
   const navigation = useNavigation();
   return (
     <TouchableOpacity onPress={() => navigation.navigate('SearchResults', { movie: item })}>
       <View style={styles.item}>
         <Image
-          source={{uri: item.poster_url}}
+          source={{ uri: item.poster_url }}
           style={styles.image}
           resizeMode="cover"
         />
@@ -50,9 +48,9 @@ const MovieItem = ({item}: {item: Movie}) => {
 const Card = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
-  const[error, setError] = useState<any>(null);
+  const [error, setError] = useState<any>(null);
 
-useEffect(() => {
+  useEffect(() => {
     const fetchMovies = async () => {
       try {
         const movieData = await getMovieDetails();
@@ -72,8 +70,8 @@ useEffect(() => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#FFD700" />
-        <Text>Loading movies...</Text>
+        <ActivityIndicator size="large" color="#fff" />
+        <Text style={styles.loadingText}>Loading movies...</Text>
       </View>
     );
   }
@@ -86,11 +84,12 @@ useEffect(() => {
       </View>
     );
   }
+
   return (
     <View style={styles.container}>
       <FlatList
         data={movies}
-        renderItem={({item}) => <MovieItem item={item} />}
+        renderItem={({ item }) => <MovieItem item={item} />}
         keyExtractor={item => item.id}
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -102,9 +101,7 @@ useEffect(() => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
-
- 
+    backgroundColor: '#000', // Black background
   },
   item: {
     borderRadius: 10,
@@ -118,16 +115,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   title: {
-    color: '#fff',
+    color: '#fff', // White text for title
     fontSize: 18,
     marginVertical: 5,
     textAlign: 'center',
   },
   rating: {
-    color: '#ffd700',
+    color: '#fff', // White text for rating
   },
   details: {
-    color: '#aaa',
+    color: '#fff', // White text for details
     fontSize: 14,
   },
   loadingContainer: {
@@ -136,7 +133,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: '#fff',
+    color: '#fff', // White text for loading state
     marginTop: 10,
   },
   errorContainer: {
@@ -145,9 +142,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   errorText: {
-    color: 'red',
+    color: '#fff', // White text for error message
     fontSize: 16,
   },
 });
-
 export default Card;
