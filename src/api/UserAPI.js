@@ -18,7 +18,6 @@ export const loginuser = async (email, password) => {
       throw error;
     }
   };
-  
   export const registeruser = async (name, mobilenumber, email, password) => {
     try {
       const response = await axios.post(`${baseURL}/users`, {
