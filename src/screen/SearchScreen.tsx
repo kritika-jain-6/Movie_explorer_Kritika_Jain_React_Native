@@ -1,53 +1,59 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
-  View, TextInput, Text, StyleSheet, TouchableOpacity, FlatList, Image,
+  View,
+  TextInput,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Image,
+  ScrollView,
+  ActivityIndicator,
 } from 'react-native';
-import { NavigationProp } from '@react-navigation/native';
+import {NavigationProp} from '@react-navigation/native';
+import {searchMovies, fetchGenres} from '../api/MovieAPI'; // Ensure these APIs are implemented correctly
 
-// Inline movies data with poster URLs and descriptions
-const moviesData = [
-  {
-    id: '1',
-    title: 'Inception',
-    genre: 'Sci-Fi',
-    poster: 'https://image.tmdb.org/t/p/w500/qmDpIHrmpJINaRKAfWQfftjCdyi.jpg',
-    description: 'A skilled thief leads a team into people\'s dreams to steal secrets.'
-  },
-  {
-    id: '2',
-    title: 'The Dark Knight',
-    genre: 'Action',
-    poster: 'https://image.tmdb.org/t/p/w500/1hRoyzDtpgMU7Dz4JF22RANzQO7.jpg',
-    description: 'Batman faces the Joker, a criminal mastermind bent on chaos.'
-  },
-  {
-    id: '3',
-    title: 'Interstellar',
-    genre: 'Sci-Fi',
-    poster: 'https://image.tmdb.org/t/p/w500/gEU2QniE6E77NI6lCU6MxlNBvIx.jpg',
-    description: 'A team of explorers travels through a wormhole to save humanity.'
-  },
-  // ... add more movies
-];
-
-const SearchScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
+const SearchScreen = ({navigation}: {navigation: NavigationProp<any>}) => {
   const [searchText, setSearchText] = useState('');
+  const [selectedGenre, setSelectedGenre] = useState('');
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [filteredResults, setFilteredResults] = useState<typeof moviesData>([]);
+  const [genres, setGenres] = useState<string[]>([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [loadingGenres, setLoadingGenres] = useState(false);
+  const [loadingSearch, setLoadingSearch] = useState(false);
 
-  const handleSearch = (text: string) => {
-    setSearchText(text);
+  useEffect(() => {
+    const loadGenres = async () => {
+      setLoadingGenres(true);
+      try {
+        const data = await fetchGenres(); // Call the API to fetch genres
+        setGenres(Array.isArray(data) ? data : []); // Ensure genres is an array
+      } catch (error) {
+        console.error('Failed to load genres:', error);
+        setGenres([]); // Fallback to empty array
+      } finally {
+        setLoadingGenres(false);
+      }
+    };
+    loadGenres();
+  }, []);
 
-    const filtered = moviesData.filter(
-      (movie) =>
-        movie.title.toLowerCase().includes(text.toLowerCase()) ||
-        movie.genre.toLowerCase().includes(text.toLowerCase())
-    );
+  const handleSearch = async (query: string, genreFilter = selectedGenre) => {
+    if (!query.trim() && !genreFilter) return;
 
-    setFilteredResults(filtered);
+    if (query && !recentSearches.includes(query)) {
+      setRecentSearches([query, ...recentSearches.slice(0, 4)]);
+    }
 
-    if (text.trim() && !recentSearches.includes(text)) {
-      setRecentSearches([text, ...recentSearches.slice(0, 4)]);
+    setLoadingSearch(true);
+    try {
+      const data = await searchMovies(query, genreFilter); // Call the API to search movies
+      setSearchResults(Array.isArray(data) ? data : []); // Ensure search results is an array
+    } catch (error) {
+      console.error('Search failed:', error);
+      setSearchResults([]); // Fallback to empty array
+    } finally {
+      setLoadingSearch(false);
     }
   };
 
@@ -55,108 +61,228 @@ const SearchScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
     setRecentSearches(recentSearches.filter(item => item !== text));
   };
 
-  return (
-    <View style={styles.container}>
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Search movies or genres..."
-        placeholderTextColor="#FFD700"
-        value={searchText}
-        onChangeText={setSearchText}
-        onSubmitEditing={() => handleSearch(searchText)}
-      />
-      <TouchableOpacity onPress={() => handleSearch(searchText)}>
-        <Text style={styles.cancelText}>Search</Text>
-      </TouchableOpacity>
+  const clearAll = () => {
+    setRecentSearches([]);
+  };
 
-      {recentSearches.length > 0 && (
-        <View style={styles.history}>
-          <Text style={styles.label}>Recent Searches</Text>
-          {recentSearches.map((item) => (
-            <View key={item} style={styles.btnContainer}>
-              <TouchableOpacity style={styles.btn} onPress={() => handleSearch(item)}>
-                <Text style={styles.btnText}>{item}</Text>
+  return (
+    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+      <Text style={styles.header}>Search</Text>
+
+      {/* Search Input */}
+      <View style={styles.searchInputContainer}>
+        <Image
+          source={{
+            uri: 'https://cdn-icons-png.flaticon.com/512/622/622669.png',
+          }}
+          style={styles.searchIcon}
+        />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search for movies, actors, genres..."
+          placeholderTextColor="#ccc"
+          value={searchText}
+          onChangeText={setSearchText}
+          onSubmitEditing={() => handleSearch(searchText)}
+        />
+      </View>
+
+      {/* Categories Section */}
+      <Text style={styles.sectionTitle}>Categories</Text>
+      {loadingGenres ? (
+        <ActivityIndicator size="large" color="#fff" />
+      ) : (
+        <View style={styles.genreGrid}>
+          {genres.length > 0 ? (
+            genres.map(genre => (
+              <TouchableOpacity
+                key={genre}
+                style={[
+                  styles.genreBox,
+                  selectedGenre === genre && styles.genreBoxActive,
+                ]}
+                onPress={() => {
+                  const newGenre = selectedGenre === genre ? '' : genre;
+                  setSelectedGenre(newGenre);
+                  handleSearch(searchText, newGenre);
+                }}>
+                <Image
+                  source={{
+                    uri: 'https://cdn-icons-png.flaticon.com/512/616/616554.png',
+                  }}
+                  style={styles.genreIcon}
+                />
+                <Text style={styles.genreText}>{genre}</Text>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => clearRecentSearch(item)}>
-                <Text style={styles.deleteText}>×</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
+            ))
+          ) : (
+            <Text style={styles.noGenresText}>No categories available</Text>
+          )}
         </View>
       )}
 
-      <Text style={styles.label}>Genres</Text>
-      <View style={styles.genresContainer}>
-        {['Action', 'Comedy', 'Drama', 'Horror', 'Sci-Fi', 'Romance', 'Fantasy', 'Thriller'].map((genre) => (
-          <TouchableOpacity
-            key={genre}
-            style={styles.genreButton}
-            onPress={() => handleSearch(genre)}
-          >
-            <Text style={styles.genreText}>{genre}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      {/* Display search results */}
-      {filteredResults.length > 0 && (
+      {/* Search Results Section */}
+      <Text style={styles.sectionTitle}>Search Results</Text>
+      {loadingSearch ? (
+        <ActivityIndicator size="large" color="#fff" />
+      ) : searchResults.length > 0 ? (
         <FlatList
-          data={filteredResults}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => navigation.navigate('SearchResults', { movie: item })}>
-              <View style={styles.card}>
-                <Image source={{ uri: item.poster }} style={styles.poster} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.title}>{item.title}</Text>
-                  <Text style={styles.genre}>{item.genre}</Text>
-                </View>
-              </View>
-            </TouchableOpacity>
+          data={searchResults}
+          keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+          renderItem={({item}) => (
+            <View style={styles.resultCard}>
+              <Image source={{uri: item.poster}} style={styles.resultImage} />
+              <Text style={styles.resultTitle}>{item.title}</Text>
+            </View>
           )}
         />
+      ) : (
+        <Text style={styles.noResultsText}>No results found</Text>
       )}
-    </View>
+
+      {/* Recent Searches Section */}
+      {recentSearches.length > 0 && (
+        <View style={styles.recentContainer}>
+          <View style={styles.recentHeader}>
+            <Text style={styles.sectionTitle}>Recent Searches</Text>
+            <TouchableOpacity onPress={clearAll}>
+              <Text style={styles.clearAll}>Clear all</Text>
+            </TouchableOpacity>
+          </View>
+          {recentSearches.map(item => (
+            <TouchableOpacity key={item} onPress={() => handleSearch(item)}>
+              <View style={styles.recentItem}>
+                <Text style={styles.recentText}>{item}</Text>
+                <TouchableOpacity onPress={() => clearRecentSearch(item)}>
+                  <Text style={styles.clearIcon}>×</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000', padding: 16 },
-  searchInput: {
-    height: 45, borderColor: '#FFD700', borderWidth: 1,
-    borderRadius: 10, paddingHorizontal: 12, color: '#FFD700', marginBottom: 10,
+  container: {
+    flex: 1,
+    backgroundColor: '#0c0f14', // Black background
+    padding: 16,
   },
-  cancelText: { color: '#FFD700', textAlign: 'right', marginBottom: 10 },
-  history: { marginBottom: 20 },
-  label: { color: '#FFD700', fontSize: 16, fontWeight: 'bold', marginBottom: 10 },
-  btnContainer: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  btn: { backgroundColor: '#222', paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20, marginRight: 10 },
-  btnText: { color: '#FFD700', fontSize: 14 },
-  deleteText: { color: '#FFD700', fontSize: 18 },
-  genresContainer: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 20 },
-  genreButton: { backgroundColor: '#222', borderRadius: 20, padding: 10, margin: 5 },
-  genreText: { color: '#FFD700' },
-  card: {
+  header: {
+    color: '#fff',
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  searchInputContainer: {
     flexDirection: 'row',
-    backgroundColor: '#111',
-    borderRadius: 10,
-    marginBottom: 12,
-    padding: 10,
-    alignItems: 'center'
+    alignItems: 'center',
+    backgroundColor: '#1c1f26',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginBottom: 20,
   },
-  poster: {
-    width: 60,
-    height: 90,
-    borderRadius: 6,
-    marginRight: 12
+  searchIcon: {
+    width: 20,
+    height: 20,
+    marginRight: 8,
+    tintColor: '#fff', // White color for icon
   },
-  title: {
+  searchInput: {
+    flex: 1,
+    height: 45,
+    color: '#fff',
+  },
+  sectionTitle: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#FFD700',
+    marginVertical: 10,
   },
-  genre: {
+  genreGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    justifyContent: 'space-between',
+  },
+  genreBox: {
+    width: '47%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#292e3a',
+    padding: 12,
+    borderRadius: 10,
+    gap: 10,
+  },
+  genreBoxActive: {
+    backgroundColor: '#1E90FF',
+  },
+  genreIcon: {
+    width: 20,
+    height: 20,
+    tintColor: '#fff', // White color for icon
+  },
+  genreText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  noGenresText: {
     color: '#ccc',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  resultCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  resultImage: {
+    width: 50,
+    height: 75,
+    borderRadius: 4,
+    marginRight: 12,
+  },
+  resultTitle: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  noResultsText: {
+    color: '#ccc',
+    fontSize: 14,
+    textAlign: 'center',
+    marginVertical: 10,
+  },
+  recentContainer: {
+    marginTop: 20,
+  },
+  recentHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  clearAll: {
+    color: '#1E90FF',
+    fontSize: 14,
+  },
+  recentItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 0.5,
+    borderColor: '#333',
+  },
+  recentText: {
+    color: '#ccc',
+    fontSize: 14,
+  },
+  clearIcon: {
+    color: '#ccc',
+    fontSize: 18,
   },
 });
 

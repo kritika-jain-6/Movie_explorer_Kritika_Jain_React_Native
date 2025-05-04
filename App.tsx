@@ -3,16 +3,16 @@ import Navigation from './src/navigation/StackNavigation'; // Import Navigation 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 // import { GestureHandlerRootView } from 'react-native-gesture-handler';
 // import 'react-native-gesture-handler';
-import { ThemeProvider } from './src/context/ThemeContext'; // Import ThemeProvider
+import { WatchlistProvider } from './src/context/WatchlistContext'; // Import WatchlistProvider
 
 class App extends Component {
   render() {
     return (
-      <ThemeProvider>
+      <WatchlistProvider>
         <GestureHandlerRootView style={{ flex: 1 }}>
         <Navigation/>
         </GestureHandlerRootView>
-      </ThemeProvider>
+      </WatchlistProvider>
     );
     
   }
