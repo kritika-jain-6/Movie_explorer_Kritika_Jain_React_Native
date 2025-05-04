@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 
+import { useWatchlist } from '../context/WatchlistContext'; // Import the context
+
 interface Movie {
   id: string;
   title: string;
@@ -23,12 +25,8 @@ interface Movie {
 const MovieDetailScreen = ({ route }: { route: RouteProp<any> }) => {
   const { movie } = route.params as { movie: Movie };
   const navigation = useNavigation();
-  const [isInWatchlist, setIsInWatchlist] = useState(false);
-
-  const toggleWatchlist = () => {
-    setIsInWatchlist(!isInWatchlist);
-  };
-
+  const { toggleWatchlist, isInWatchlist } = useWatchlist();
+  const inWatchlist = isInWatchlist(movie.id);
   return (
 <View style={styles.container}>
 <ScrollView   >
@@ -59,21 +57,13 @@ const MovieDetailScreen = ({ route }: { route: RouteProp<any> }) => {
 
       {/* Watchlist Button */}
       <TouchableOpacity
-      style={styles.watchlistButton}
-        onPress={toggleWatchlist}
-      >
-        {/* <Image
-          source={{
-            uri: isInWatchlist
-              ? '<a href="https://www.flaticon.com/free-icons/watchlist" title="watchlist icons">Watchlist icons created by Tanah Basah - Flaticon</a>' // filled bookmark
-              : 'https://cdn-icons-png.flaticon.com/512/1828/1828971.png', // outline bookmark
-          }}
-          style={styles.icon}
-        /> */}
-        <Text style={styles.watchlistText}>
-          {isInWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}
-        </Text>
-      </TouchableOpacity>
+          style={styles.watchlistButton}
+          onPress={() => toggleWatchlist(movie)}
+        >
+          <Text style={styles.watchlistText}>
+            {inWatchlist ? 'Remove from Watchlist' : 'Add to Watchlist'}
+          </Text>
+        </TouchableOpacity>
     </ScrollView>
 </View>
   );
