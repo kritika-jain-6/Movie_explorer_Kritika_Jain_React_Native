@@ -1,8 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, Switch, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import withNavigation from '../navigation/withHOC'; // Make sure the path is correct
 
-const ProfileScreen = ({ navigation }) => {
+import { NavigationProp } from '@react-navigation/native';
+
+const ProfileScreen = ({ navigation }: { navigation: NavigationProp<any> }) => {
 
   const user = {
     name: 'John Doe',

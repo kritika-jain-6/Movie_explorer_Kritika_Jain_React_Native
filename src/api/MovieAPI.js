@@ -12,3 +12,4 @@ export const getMovieDetails=async()=>{
         throw error;
     }
 }
+
